@@ -1,0 +1,87 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=320, initial-scale=1">
+        <title>GPS Klient</title>
+        <style type="text/css">
+          * {font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;font-style: italic;font-size: 24px;}
+        html, body, #wrapper {margin: 0;padding: 0;height: 100%;}
+          #wrapper {background-color: #ecf0f1;}
+          #footer {box-sizing: border-box;position: fixed;bottom: 0;height: 50px;width: 100%;background-color: #2980b9;}
+          #footer .content {padding-top: 4px;position: relative;}
+          #user { width: 20%; }
+          #message { width: 68%; }
+          #send_btn {width: 10%;position: absolute;right: 0;bottom: 0;margin: 0;}
+          .content {width: 70%;margin: 0 auto;}
+          input[type="text"],
+          input[type="button"] {border: 0;color: #fff;}
+          input[type="text"] {background-color: #146EA8;padding: 3px 10px;}
+          input[type="button"] {background-color: #f39c12;border-right: 2px solid #e67e22;border-bottom: 2px solid #e67e22;min-width: 70px;display: inline-block;}
+          input[type="button"]:hover {background-color: #e67e22;border-right: 2px solid #f39c12;border-bottom: 2px solid #f39c12;cursor: pointer;}
+          .system,
+          .username {color: #aaa;font-style: italic;font-family: monospace;font-size: 16px;}
+          @media(max-width: 1000px) {.content { width: 90%; }}
+          @media(max-width: 780px) {#footer { height: 91px; }#chat_box { padding-bottom: 91px; }
+            #user { width: 100%; }
+            #message { width: 80%; }
+            }
+          @media(max-width: 400px) {
+            #footer { height: 135px; }
+            #chat_box { padding-bottom: 135px; }
+            #message { width: 100%; }
+            #send_btn {position: relative;margin-top: 3px;width: 100%;}
+          }
+    </style>
+    </head>
+        <body>
+            <div id="wrapper">
+                <div id="userinfo" class="content"></div>
+                    <div id="footer">
+                        <div class="content">
+                        <input type="text" id="user" placeholder="Hvem er du ?" />
+                        <input type="button" disabled id="send_btn" value="Send" onclick="sendMessage()">
+                        </div>
+                    </div>
+            </div>
+        <script>
+        var wsUri = "ws://{{req.headers.host}}/ws/gpsdata";
+        var ws = new WebSocket(wsUri);  // setter opp og starter en websocket forbindelse 
+        var user = "EspenT";
+        var lat,lon;
+        ws.onopen = function(ev) { connected(); }; // hvis websoket åpnes kalles funcsjon connected 
+        ws.onclose = function(ev) { console.log('Disconnected');} // skriver ut Disconnected hvis sockert feiler
+        ws.onmessage = function(ev) { }
+        ws.onerror = function(ev) {console.log("WebSoket Error!"); }
+        
+        function connected(message) {  // Her startes GPS 
+        if (navigator.geolocation){
+            console.log("geopos");
+            navigator.geolocation.getCurrentPosition(onSucess);
+            }
+            else {
+                alert("Støtter ikke geoPos");
+                exit();
+            }
+            function onSucess(position){
+            console.log("Sucess");
+            lat = position.coords.latitude;
+            lon = position.coords.longitude;
+            console.log("Dette er din geopossisjon: " +lat+':'+lon);
+            document.getElementById("send_btn").disabled = false; 
+            }
+        }
+        function sendMessage() {  // kjøres når du trukker på send knappen (<input type="button" disabled id="send_btn" value="Send" onclick="sendMessage()">)
+            var payload = {
+            Latitude: lat,Longitude: lon,
+            User: document.getElementById('user').value,
+            ts: (new Date()).getTime()
+            };
+
+            ws.send(JSON.stringify(payload));
+            console.log("Medling sendt",JSON.stringify(payload));
+            payload = "";
+            
+        };
+        </script>
+        </body>
+</html>
+    
