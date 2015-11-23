@@ -1,0 +1,47 @@
+<html>
+<head>
+  <title>Instagram2Watson</title>
+</head>
+<body>
+  <div>
+      <img id="bilde" src="">
+  </div>
+  <div>
+      <img id="spinner" src="http://telefongps.eu-gb.mybluemix.net/images/watson.gif">
+      <p id="text"></p>
+  </div>
+  <script type="text/javascript">
+    var wsUri = "ws://{{req.headers.host}}/ws/bildedata";
+    var map;
+    var ws;
+     
+      ws = new WebSocket(wsUri);
+      ws.onopen = function(){ console.log("Connected websocket");};
+      ws.onerror = function(){ console.log("Websocket error"); };
+      ws.onmessage = function(evt){
+          console.log("Message recived!", evt.data);
+          var str = evt.data;
+          
+          var n = str.search(/([http])/g); // her gjør jeg en test på om det er linken fra instagram eller scoring fra watson som kommer
+          console.log("n= ", n);
+        if (n<1){
+        
+        document.getElementById('bilde').src=(evt.data);
+        }
+        else{
+            var arr = JSON.parse(evt.data);
+            var ansvers = arr.length;
+            var x = arr.map( function(item) { 
+                draw(item.label_name+" - score: "+item.label_score+'\n'); 
+                function draw(items){
+                    var svar = document.createTextNode(items);
+                    document.getElementById("text").appendChild(svar);
+                        }
+                    });
+            document.getElementById('spinner').src="";
+        }
+        
+      }
+  </script>
+</body>
+</html>
